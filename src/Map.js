@@ -1,4 +1,5 @@
 import React, {Component} from 'react'
+import emitter from './ev'
 const BMap = window.BMap
 const BMAP_STATUS_SUCCESS = window.BMAP_STATUS_SUCCESS
 
@@ -20,11 +21,14 @@ export default class Map extends Component {
         let point = new BMap.Point(pointData[0], pointData[1]);  // 创建点坐标
         map.centerAndZoom(point, 15);
         this.getCurrentLocation()
+        this.eventemitter = emitter.addListener('search', (msg) => {
+            this.getNearByLocation(msg)
+        })
     }
     componentDidUpdate() {
         let point = this.props.currentPoint;
         let selectIndex = this.props.selectIndex;
-        if (selectIndex > 0) {
+        if (selectIndex >= 0) {
             let addr = this.props.nearbyAddr[this.props.selectIndex]
             console.log('point1', point)
             const opts = {
