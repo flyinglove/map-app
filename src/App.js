@@ -9,76 +9,49 @@ class App extends Component {
   constructor() {
     super()
     this.setCurrentPoint = this.setCurrentPoint.bind(this)
-    this.getLocationByPoint = this.getLocationByPoint.bind(this)
-    this.getNearByLocation = this.getNearByLocation.bind(this)
+    this.setCurrentSearch = this.setCurrentSearch.bind(this)
+    this.setNearbyAddr = this.setNearbyAddr.bind(this)
+    this.setSearchIndex = this.setSearchIndex.bind(this)
   }
   state = {
     selectIndex: -1,
     nearbyAddr: [],
     currentSearch: '',
-    currentPoint: [116.404, 39.915],
-    map: {}
-  }
-  componentDidMount() {
-    this.getLocationByPoint(this.state.currentPoint)
-  }
-  getNearByLocation(address) {
-      let that = this;
-      const map = new BMap.Map("map");
-      let currentPoint = this.state.currentPoint
-      map.addControl(new BMap.NavigationControl());
-      map.addControl(new BMap.ScaleControl());
-      map.addControl(new BMap.OverviewMapControl());
-      console.log(currentPoint)
-      map.centerAndZoom(new BMap.Point(currentPoint[0], currentPoint[1]), 15);
-
-      const options = {
-          onSearchComplete: function(results){
-              if (local.getStatus() === BMAP_STATUS_SUCCESS){
-                  // 判断状态是否正确
-                  var s = [];
-                  for (var i = 0; i < results.getCurrentNumPois(); i ++){
-                      console.log(results.getPoi(i))
-                      s.push(results.getPoi(i));
-                  }
-                  that.setState({
-                      nearbyAddr: s
-                  })
-              }
-          }
-      };
-      let local = new BMap.LocalSearch(map, options);
-      local.search(address);
-  }
-  getLocationByPoint() {
-      let that = this
-      let point = this.state.currentPoint;
-      const myGeo = new BMap.Geocoder();
-// 根据坐标得到地址描述
-      myGeo.getLocation(new BMap.Point(point[0], point[1]), function(result){
-          if (result){
-              that.setState({
-                  currentSearch: result.address
-              })
-              that.getNearByLocation(result.address)
-          }
-      });
+    currentPoint: [116.404, 39.915]
   }
   setCurrentPoint(point) {
     this.setState({
         currentPoint: point
     })
   }
-  getNearByAddr() {
-
+  setCurrentSearch(address) {
+    this.setState({
+        currentSearch: address
+    })
+  }
+  setNearbyAddr(addr) {
+    this.setState({
+        nearbyAddr: addr
+    })
+  }
+  setSearchIndex(index) {
+    let addr = this.state.nearbyAddr[index]
+    let point = addr.point
+      console.log(point)
+    this.setState({
+        selectIndex: index,
+        currentPoint: [point.lng, point.lat]
+    })
   }
   render() {
     return (
-      <div className="App">
-        <Filter selectIndex={this.state.selectIndex} nearbyAddr={this.state.nearbyAddr}/>
-        <div className="wrapper">
+      <div className="App" style={styles.container}>
+        <div className="filter" style={styles.filter}>
+            <Filter selectIndex={this.state.selectIndex} setSearchIndex={this.setSearchIndex} nearbyAddr={this.state.nearbyAddr}/>
+        </div>
+        <div className="wrapper" style={styles.wrapper}>
           <NavBar/>
-          <Map currentPoint={this.state.currentPoint} setCurrentPoint={this.setCurrentPoint}/>
+          <Map nearbyAddr={this.state.nearbyAddr} selectIndex={this.state.selectIndex} currentPoint={this.state.currentPoint} setNearbyAddr={this.setNearbyAddr} setCurrentSearch={this.setCurrentSearch} setCurrentPoint={this.setCurrentPoint}/>
         </div>
       </div>
     );
@@ -86,3 +59,13 @@ class App extends Component {
 }
 
 export default App;
+const styles = {
+  container: {
+    display: "flex"
+  }, filter: {
+    width: '300px'
+  },
+    wrapper: {
+      flex: 1
+    }
+}
