@@ -31,7 +31,7 @@ export default class Map extends Component {
                 map.addOverlay(mk);
                 let point = r.point;
                 map.panTo(point);
-                that.props.setCurrentPoint([point.lat, point.lng])
+                that.props.setCurrentPoint([point.lng, point.lat])
                 // alert('您的位置：'+r.point.lng+','+r.point.lat);
             }
             else {

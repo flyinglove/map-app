@@ -25,6 +25,13 @@ class App extends Component {
   getNearByLocation(address) {
       let that = this;
       const map = new BMap.Map("map");
+      let currentPoint = this.state.currentPoint
+      map.addControl(new BMap.NavigationControl());
+      map.addControl(new BMap.ScaleControl());
+      map.addControl(new BMap.OverviewMapControl());
+      console.log(currentPoint)
+      map.centerAndZoom(new BMap.Point(currentPoint[0], currentPoint[1]), 15);
+
       const options = {
           onSearchComplete: function(results){
               if (local.getStatus() === BMAP_STATUS_SUCCESS){
