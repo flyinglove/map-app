@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
 import emitter from './ev'
+import api from './thirdapi'
 const BMap = window.BMap
 const BMAP_STATUS_SUCCESS = window.BMAP_STATUS_SUCCESS
 
@@ -25,23 +26,68 @@ export default class Map extends Component {
             this.getNearByLocation(msg)
         })
     }
+    getTip(params) {
+        let formatDate = ''
+        let date = new Date().toLocaleDateString().split('/')
+        date.reduce((prev, item, index) => {
+            if (index === 0) {
+                formatDate = item
+            } else {
+                if (('' + item).length === 1) {
+                    formatDate += '0' + item
+                } else {
+                    formatDate += '' + item
+                }
+            }
+            return formatDate
+        }, date[0])
+        let temp = params.point;
+        let point = new BMap.Point(temp.lng, temp.lat);
+        console.log('point', point, temp)
+        let paramsObj = {
+            client_id: api.cliendId,
+            client_secret: api.cliendSecret,
+            ll: `${params.point.lat},${params.point.lng}`,
+            query: params.address,
+            v: formatDate,
+            limit: 1
+        }
+        let paramStr = '';
+        Object.keys(paramsObj).forEach((key) => {
+            paramStr += `&${key}=${paramsObj[key]}`
+        })
+        paramStr = '?' + paramStr.slice(1)
+        console.log(paramStr)
+        return fetch(api.url + paramStr).then((res) => {
+            return (res.json())
+        }).then(data => {
+            console.log(data)
+            let venue = data.response.groups[0] && data.response.groups[0].items[0].venue.name
+            return venue
+        })
+    }
     componentDidUpdate() {
         let point = this.props.currentPoint;
         let selectIndex = this.props.selectIndex;
         if (selectIndex >= 0) {
             let addr = this.props.nearbyAddr[this.props.selectIndex]
             console.log('point1', point)
-            const opts = {
-                width : 250,     // 信息窗口宽度
-                height: 100,     // 信息窗口高度
-                title : addr.title  // 信息窗口标题
-            }
-            const infoWindow = new BMap.InfoWindow(addr.address, opts);  // 创建信息窗口对象
-            map.openInfoWindow(infoWindow, addr.point);
+            this.getTip(addr).then(venue => {
+                const opts = {
+                    width : 250,     // 信息窗口宽度
+                    height: 120,     // 信息窗口高度
+                    title : addr.title  // 信息窗口标题
+                }
+                // const infoWindow = new BMap.InfoWindow(addr.address, opts);  // 创建信息窗口对象
+                const infoWindow = new BMap.InfoWindow(`地址：${addr.address}，<br/> 推荐： ${venue}`, opts);  // 创建信息窗口对象
+                map.openInfoWindow(infoWindow, addr.point);
+
+            })
         }
         map.centerAndZoom(new BMap.Point(point[0], point[1]), 15);
     }
     setAddrMark(addrArr) {
+        let that = this;
         addrArr.forEach((addr) => {
             let mk = new BMap.Marker(addr.point);
             map.addOverlay(mk);
@@ -49,13 +95,15 @@ export default class Map extends Component {
             mk.addEventListener("click", (function(addr){
                 return function() {
                     console.log(addr)
-                    const opts = {
-                        width : 250,     // 信息窗口宽度
-                        height: 100,     // 信息窗口高度
-                        title : addr.title  // 信息窗口标题
-                    }
-                    const infoWindow = new BMap.InfoWindow(addr.address, opts);  // 创建信息窗口对象
-                    map.openInfoWindow(infoWindow, addr.point);
+                    let venue = that.getTip(addr).then((venue) => {
+                        const opts = {
+                            width : 250,     // 信息窗口宽度
+                            height: 120,     // 信息窗口高度
+                            title : addr.title  // 信息窗口标题
+                        }
+                        const infoWindow = new BMap.InfoWindow(`地址：${addr.address}，<br /> 推荐： ${venue}`, opts);  // 创建信息窗口对象
+                        map.openInfoWindow(infoWindow, addr.point);
+                    })
                 }
             }(addr)));
         })
@@ -128,6 +176,7 @@ export default class Map extends Component {
                 // that.setState({
                 //     currentSearch: result.address
                 // })
+                // this.currentSearch = result.address;
                 that.props.setCurrentSearch(result.address);
                 that.getNearByLocation(result.address)
             }

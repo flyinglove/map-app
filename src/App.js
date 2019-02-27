@@ -12,12 +12,14 @@ class App extends Component {
     this.setCurrentSearch = this.setCurrentSearch.bind(this)
     this.setNearbyAddr = this.setNearbyAddr.bind(this)
     this.setSearchIndex = this.setSearchIndex.bind(this)
+    this.setSideBar = this.setSideBar.bind(this)
   }
   state = {
     selectIndex: -1,
     nearbyAddr: [],
     currentSearch: '',
-    currentPoint: [116.404, 39.915]
+    currentPoint: [116.404, 39.915],
+    sideBar: false
   }
   setCurrentPoint(point) {
     this.setState({
@@ -43,14 +45,23 @@ class App extends Component {
         currentPoint: [point.lng, point.lat]
     })
   }
+  setSideBar() {
+    this.setState({
+      sideBar: !this.state.sideBar
+    })
+  }
   render() {
     return (
       <div className="App" style={styles.container}>
-        <div className="filter" style={styles.filter}>
-            <Filter selectIndex={this.state.selectIndex} setSearchIndex={this.setSearchIndex} nearbyAddr={this.state.nearbyAddr}/>
-        </div>
+        {
+          this.state.sideBar && (
+              <div className="filter" style={styles.filter}>
+               <Filter selectIndex={this.state.selectIndex} setSearchIndex={this.setSearchIndex} nearbyAddr={this.state.nearbyAddr}/>
+              </div>
+          )
+        }
         <div className="wrapper" style={styles.wrapper}>
-          <NavBar/>
+          <NavBar setSideBar={this.setSideBar}/>
           <Map nearbyAddr={this.state.nearbyAddr} selectIndex={this.state.selectIndex} currentPoint={this.state.currentPoint} setNearbyAddr={this.setNearbyAddr} setCurrentSearch={this.setCurrentSearch} setCurrentPoint={this.setCurrentPoint}/>
         </div>
       </div>
